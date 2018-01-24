@@ -252,16 +252,20 @@
 
     var $html = $('html');
     var lockedClass = namespacify('is-locked');
+    var scrollbarWidth;
     var paddingRight;
     var $body;
 
     if (!$html.hasClass(lockedClass)) {
       $body = $(document.body);
 
+      scrollbarWidth = getScrollbarWidth();
+
       // Zepto does not support '-=', '+=' in the `css` method
-      paddingRight = parseInt($body.css('padding-right'), 10) + getScrollbarWidth();
+      paddingRight = parseInt($body.css('padding-right'), 10) + scrollbarWidth;
 
       $body.css('padding-right', paddingRight + 'px');
+      $body.attr('data-scrollbar-width', scrollbarWidth);
       $html.addClass(lockedClass);
     }
   }
@@ -277,16 +281,20 @@
 
     var $html = $('html');
     var lockedClass = namespacify('is-locked');
+    var scrollbarWidth;
     var paddingRight;
     var $body;
 
     if ($html.hasClass(lockedClass)) {
       $body = $(document.body);
 
-      // Zepto does not support '-=', '+=' in the `css` method
-      paddingRight = parseInt($body.css('padding-right'), 10) - getScrollbarWidth();
+      scrollbarWidth = Number($body.attr('data-scrollbar-width')) || 0;
 
-      $body.css('padding-right', paddingRight + 'px');
+      paddingRight = parseInt($body[0].style.paddingRight, 10) - scrollbarWidth;
+      paddingRight = (paddingRight > 0) ? paddingRight + 'px' : '';
+
+      $body.css('padding-right', paddingRight);
+      $body.removeAttr('data-scrollbar-width');
       $html.removeClass(lockedClass);
     }
   }
@@ -404,7 +412,7 @@
 
     instance.$bg.removeClass(instance.settings.modifier);
     instance.$overlay.removeClass(instance.settings.modifier).hide();
-    instance.$wrapper.hide();
+    instance.$wrapper.hide().attr('aria-hidden', 'true');
     unlockScreen();
     setState(instance, STATES.CLOSED, true);
   }
@@ -541,6 +549,7 @@
         remodal.settings.modifier + ' ' +
         namespacify('is', STATES.CLOSED))
       .hide()
+      .attr('aria-hidden', 'true')
       .append(remodal.$modal);
     $appendTo.append(remodal.$wrapper);
 
@@ -615,7 +624,7 @@
     lockScreen();
     remodal.$bg.addClass(remodal.settings.modifier);
     remodal.$overlay.addClass(remodal.settings.modifier).show();
-    remodal.$wrapper.show().scrollTop(0);
+    remodal.$wrapper.show().attr('aria-hidden', 'false').scrollTop(0);
     remodal.$modal.focus();
 
     syncWithAnimation(
@@ -659,7 +668,7 @@
       function() {
         remodal.$bg.removeClass(remodal.settings.modifier);
         remodal.$overlay.removeClass(remodal.settings.modifier).hide();
-        remodal.$wrapper.hide();
+        remodal.$wrapper.hide().attr('aria-hidden', 'true');
         unlockScreen();
 
         setState(remodal, STATES.CLOSED, false, reason);
